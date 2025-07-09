@@ -22,6 +22,7 @@ export default async ({ req, res, log, error }) => {
       emailVerification: u.emailVerification,
       registration: u.registration,
     }));
+    log(JSON.stringify(safeUsers));
     return res.json({ users: safeUsers });
   } catch (err) {
     error("Could not list users: " + err.message);
