@@ -8,35 +8,28 @@ export default async ({ req, res, log, error }) => {
     .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
     .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
     .setKey(req.headers['x-appwrite-key'] ?? '');
-  const users = new Users(client);
+
+  const databases = new Databases(client);
 
   try {
-    const response = await users.list();
-    // Log messages and errors to the Appwrite Console
-    // These logs won't be seen by your end users
-    log(`Total users: ${response.total}`);
+const databaseId = process.env.APPWRITE_DATABASE_ID; // or hardcode your database ID
+    const collectionId = '686e17800021db214146'; // contact_form collection ID
 
-  // Filter out admins
-        const filtered = response.users.filter(
-      (u) => !u.prefs || u.prefs.role !== "admin"
-    );
+    const response = await databases.listDocuments(databaseId, collectionId);
 
-        // Only return the fields needed for the dashboard
-    const safeUsers = filtered.map((u) => ({
-      $id: u.$id,
-      name: u.name,
-      email: u.email,
-      emailVerification: u.emailVerification,
-      registration: u.registration,
+    const contacts = response.documents.map(doc => ({
+      id: doc.$id,
+      name: doc.name,
+      email: doc.email,
+      phone: doc.phone,
+      subject: doc.subject,
+      message: doc.message,
+      createdAt: doc.$createdAt,
     }));
 
-        // Log the safeUsers for debugging (optional)
-    log(JSON.stringify(safeUsers));
-
-        // Return the user list to the frontend
-    return res.json({ users: safeUsers });
+    return res.json({ contacts });
   } catch(err) {
-    error("Could not list users: " + err.message);
+    error("Could not fetch contacts: " + err.message);
   }
 
   // The req object contains the request data
