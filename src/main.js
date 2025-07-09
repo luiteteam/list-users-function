@@ -4,7 +4,7 @@ export default async ({ req, res, log, error }) => {
   const client = new Client()
     .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
     .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
-    .setKey(process.env.APPWRITE_API_KEY); // Use env var, not header
+    .setKey(process.env.APPWRITE_API_KEY);
 
   const users = new Users(client);
 
@@ -14,17 +14,16 @@ export default async ({ req, res, log, error }) => {
     const filtered = response.users.filter(
       (u) => !u.prefs || u.prefs.role !== "admin"
     );
-    // Only return safe fields
+    // Only return the fields needed for the dashboard
     const safeUsers = filtered.map((u) => ({
       $id: u.$id,
-      email: u.email,
       name: u.name,
-      prefs: u.prefs,
+      email: u.email,
+      emailVerification: u.emailVerification,
       registration: u.registration,
-      status: u.status,
     }));
     return res.json({ users: safeUsers });
-  } catch(err) {
+  } catch (err) {
     error("Could not list users: " + err.message);
     return res.json({ error: err.message }, 500);
   }
