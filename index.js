@@ -1,28 +1,33 @@
-const sdk = require("node-appwrite");
+import { Client, Databases } from 'node-appwrite';
 
-module.exports = async (req, res) => {
-  const client = new sdk.Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1")
-    .setProject(process.env.APPWRITE_PROJECT_ID)
+export default async ({ req, res, log, error }) => {
+  const client = new Client()
+    .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
+    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
     .setKey(process.env.APPWRITE_API_KEY);
 
-  const users = new sdk.Users(client);
+  const databases = new Databases(client);
 
   try {
-    const result = await users.list({ limit: 100 });
-    const filtered = result.users.filter(
-      (u) => !u.prefs || u.prefs.role !== "admin"
-    );
-    const safeUsers = filtered.map((u) => ({
-      $id: u.$id,
-      email: u.email,
-      name: u.name,
-      prefs: u.prefs,
-      registration: u.registration,
-      status: u.status,
+    // Use your actual database and collection IDs
+    const databaseId = process.env.APPWRITE_DATABASE_ID; // or hardcode your database ID
+    const collectionId = '686e17800021db214146'; // contact_form collection ID
+
+    const response = await databases.listDocuments(databaseId, collectionId);
+
+    const contacts = response.documents.map(doc => ({
+      id: doc.$id,
+      name: doc.name,
+      email: doc.email,
+      phone: doc.phone,
+      subject: doc.subject,
+      message: doc.message,
+      createdAt: doc.$createdAt,
     }));
-    res.json({ users: safeUsers });
+
+    return res.json({ contacts });
   } catch (err) {
-    res.json({ error: err.message }, 500);
+    error("Could not fetch contacts: " + err.message);
+    return res.json({ error: err.message }, 500);
   }
 };
