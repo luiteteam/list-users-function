@@ -1,6 +1,6 @@
 const sdk = require("node-appwrite");
 
-module.exports = async function (req, res) {
+module.exports = async (req, res) => {
   const client = new sdk.Client()
     .setEndpoint(process.env.APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1")
     .setProject(process.env.APPWRITE_PROJECT_ID)
