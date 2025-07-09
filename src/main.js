@@ -15,6 +15,26 @@ export default async ({ req, res, log, error }) => {
     // Log messages and errors to the Appwrite Console
     // These logs won't be seen by your end users
     log(`Total users: ${response.total}`);
+
+  // Filter out admins
+        const filtered = response.users.filter(
+      (u) => !u.prefs || u.prefs.role !== "admin"
+    );
+
+        // Only return the fields needed for the dashboard
+    const safeUsers = filtered.map((u) => ({
+      $id: u.$id,
+      name: u.name,
+      email: u.email,
+      emailVerification: u.emailVerification,
+      registration: u.registration,
+    }));
+
+        // Log the safeUsers for debugging (optional)
+    log(JSON.stringify(safeUsers));
+
+        // Return the user list to the frontend
+    return res.json({ users: safeUsers });
   } catch(err) {
     error("Could not list users: " + err.message);
   }
